@@ -1,0 +1,58 @@
+/* 
+Name:   wrtie-config.slax
+Authot: Julio Carranza
+Version: 1.0/2010
+Description: This script is executed if there is a log that contents the text "Backup configuration" */
+
+version 1.0;
+ 
+ns junos = "http://xml.juniper.net/junos/*/junos";
+ns xnm = "http://xml.juniper.net/xnm/1.1/xnm";
+ns jcs = "http://xml.juniper.net/junos/commit-scripts/1.0";
+ns func extension = "http://exslt.org/functions";
+ns util extension = "http://xml.juniper.net/util";
+ 
+import "../import/junos.xsl";
+ 
+ 
+/* Embedded event policy */
+var $event-definition = {
+    <event-options> {
+        <policy> {
+            <name> "write-config";
+            <events> "SYSTEM";
+            <attributes-match> {
+                <from-event-attribute> "SYSTEM.message";
+                <condition> "matches";
+                <to-event-attribute-value> "Backup configuration";
+            }
+ 
+            <then> {
+                <event-script> {
+                    <name> "write-config.slax";
+                }
+            }
+        }
+    }
+}
+ 
+ 
+match / {
+    <event-script-results> {
+	/* The configuration is stored in a variable*/
+        var $show-config = <get-configuration format="text">;
+        var $config = jcs:invoke( $show-config);
+ 
+	/* The variable overrides the values of the file, permissions are set so all user can read the output file. */
+        var $writing = <file-put> {
+            <filename>"/var/tmp/backupconfiguration";
+            <encoding> "ascii";
+            <permission> "644";
+            <delete-if-exist>;
+            <file-contents> $config;
+        }
+        var $result-writing = jcs:invoke($writing);
+ 
+ 
+    }
+}

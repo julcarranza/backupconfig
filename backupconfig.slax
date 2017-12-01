@@ -1,0 +1,22 @@
+/* 
+Name:   backupconfig.slax
+Authot: Julio Carranza
+Version: 1.0/2010
+Description: This script generates a log message that will trigger an event script(write-config.slax) in order to backup the configuration as the root user. */
+
+version 1.0;
+ns junos = "http://xml.juniper.net/junos/*/junos";
+ns xnm = "http://xml.juniper.net/xnm/1.1/xnm";
+ns jcs = "http://xml.juniper.net/junos/commit-scripts/1.0";
+import "../import/junos.xsl";
+ 
+match / {
+<op-script-results> {
+	/* Assemble the facility-severity string */
+	var $facility-severity = "daemon.alert";
+
+	/* Log message to syslog */
+	expr jcs:syslog( $facility-severity, "Backup configuration" );
+	<output> "\nConfiguration has been saved. Please verify using file list /var/tmp/backupconfiguration detail and show log for this file";
+	}
+}
